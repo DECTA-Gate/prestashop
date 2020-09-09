@@ -1,5 +1,5 @@
 # Decta
-This plugin add Custom Payment Gateways for Prestashop. 
+This module add Custom Payment Gateways for Prestashop. 
 
 ## Description
 This version was tested with prestashop 1.7. 
