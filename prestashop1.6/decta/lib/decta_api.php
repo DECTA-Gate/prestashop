@@ -1,49 +1,45 @@
 <?php
-define('DECTA_MODULE_VERSION', 'v3.0');
+define('DECTA_MODULE_VERSION', 'v2.0');
 define('ROOT_URL', 'https://gate.decta.com');
-class DectaAPI
+Class DectaAPI
 {
-    public function __construct($private_key, $public_key, $expiration_time, $logger)
+    public function __construct($private_key, $public_key, $logger)
     {
         $this->private_key = $private_key;
         $this->public_key = $public_key;
-        $this->expiration_time = $expiration_time;
         $this->logger = $logger;
-    }
-
-    public function getExpirationTime()
-    {
-        return $this->expiration_time;
     }
 
     public function create_payment($params)
     {
         $this->log_info(sprintf("Loading payment form for order #%s", $params['number']));
-
+    
         $result = $this->call('POST', '/api/v0.6/orders/', $params);
-        if ($result == null) {
-            return null;
+
+        if ($result == NULL)
+        {
+            return NULL;
         }
-       
-        if (isset($result['full_page_checkout']) && isset($result['id'])) {
+
+        if (isset($result['full_page_checkout']) && isset($result['id']))
+        {
             $this->log_info(sprintf("Form loaded successfully for order #%s", $params['number']));
             return $result;
-        } else {
-            return null;
+        }
+        else
+        {
+            return NULL;
         }
     }
 
-    public function getUser($filter_email, $filter_phone)
-    {
+    public function getUser($filter_email, $filter_phone){
         $params['filter_email'] = $filter_email;
         $params['filter_phone'] = $filter_phone;
         $users = $this->call('GET', '/api/v0.6/clients/', $params);
-
-        return isset($users['results'][0]) ? $users['results'][0] : null;
+        return $users['results'][0] ?: null;
     }
 
-    public function createUser($params)
-    {
+    public function createUser($params) {
         return $this->call('POST', '/api/v0.6/clients/', $params);
     }
 
@@ -54,20 +50,23 @@ class DectaAPI
         $order_id = (string)$order_id;
         $result = $this->call('GET', sprintf('/api/v0.6/orders/%s/', $payment_id));
 
-        if ($result == null) {
+        if ($result == NULL)
+        {
             return false;
         }
-
         $payment_has_matching_order_id = $order_id == (string)$result['number'];
-
-        if (!$payment_has_matching_order_id) {
+        if (!$payment_has_matching_order_id)
+        {
             $this->log_error('Payment object has a wrong order id');
         }
 
-        if ($result && $payment_has_matching_order_id && ($result['status'] == 'paid' || $result['status'] == 'withdrawn')) {
+        if ($result && $payment_has_matching_order_id && ($result['status'] == 'paid' || $result['status'] == 'withdrawn'))
+        {
             $this->log_info(sprintf("Validated order #%s, payment #%s", $order_id, $payment_id));
             return true;
-        } else {
+        }
+        else
+        {
             $this->log_error('Could not validate payment');
             return false;
         }
@@ -95,12 +94,11 @@ class DectaAPI
             curl_setopt($ch, CURLOPT_PUT, 1);
         }
 
-        if ($method == 'GET') {
+        if($method == 'GET') {
             $get_params = '';
-            foreach ($original_params as $key=>$value) {
+            foreach($original_params as $key=>$value)
                 $get_params .= $key.'='.urlencode($value).'&';
-            }
-            $get_params = trim($get_params, '&');
+            $get_params = trim($get_params,'&');
             $request = ROOT_URL.$route.'?'.$get_params;
             $this->log_info('Get Request:');
             $this->log_info($request);
@@ -114,9 +112,10 @@ class DectaAPI
             curl_setopt($ch, CURLOPT_POSTFIELDS, $params);
         }
 
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-        curl_setopt($ch, CURLOPT_FORBID_REUSE, 1);
-        curl_setopt($ch, CURLOPT_FRESH_CONNECT, 1);
+		curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0);
+		curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+		curl_setopt($ch, CURLOPT_FORBID_REUSE, 1);
+		curl_setopt($ch, CURLOPT_FRESH_CONNECT, 1);
 
         curl_setopt($ch, CURLOPT_HTTPHEADER, array(
             'Content-type: application/json',
@@ -138,14 +137,16 @@ class DectaAPI
         $this->log_info('Response:');
         $this->log_info(var_export($result, true));
 
-        if (!$result) {
+        if (!$result)
+        {
             $this->log_error('JSON parsing error/NULL API response');
-            return null;
+            return NULL;
         }
 
-        if (!empty($result['errors'])) {
+        if (!empty($result['errors']))
+        {
             $this->log_error('API Errors', $result['errors']);
-            return null;
+            return NULL;
         }
 
 
@@ -158,10 +159,11 @@ class DectaAPI
         $this->logger->log(DECTA_MODULE_VERSION . ' ' . $text);
     }
 
-    public function log_error($error_text, $error_data = null)
+    public function log_error($error_text, $error_data = NULL)
     {
         $error_text = "DECTA ERROR: " . $error_text . ";";
-        if ($error_data) {
+        if ($error_data)
+        {
             $error_text.= " ERROR DATA: " . var_export($error_data, true) . ";";
         }
 
