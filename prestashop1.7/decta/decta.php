@@ -152,7 +152,7 @@ class Decta extends PaymentModule
 
         $state = $params['order']->getCurrentState();
 
-        if (in_array($state, array(_PS_OS_PAYMENT_, _PS_OS_ERROR_))) {
+        if($state == _PS_OS_PAYMENT_) {
             $this->smarty->assign(array(
                 'shop_name' => $this->context->shop->name,
                 'total' => Tools::displayPrice($params['order']->getOrdersTotalPaid(), new Currency($params['order']->id_currency), false),
