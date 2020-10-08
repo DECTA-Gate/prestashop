@@ -145,7 +145,7 @@ class Decta extends PaymentModule
         }
 
         $state = $params['objOrder']->getCurrentState();
-        if (in_array($state, array(_PS_OS_PAYMENT_, _PS_OS_OUTOFSTOCK_PAID_, _PS_OS_ERROR_))) {
+        if (in_array($state, array(_PS_OS_PAYMENT_, _PS_OS_OUTOFSTOCK_PAID_))) {
             $this->smarty->assign(array(
                 'total_to_pay' => Tools::displayPrice($params['total_to_pay'], $params['currencyObj'], false),
                 'status' => 'ok',

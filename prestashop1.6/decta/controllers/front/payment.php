@@ -59,7 +59,10 @@ class DectaPaymentModuleFrontController extends ModuleFrontController
         if ($payment) {
             $this->decta->log_info("Create prestashop order start: " . date("d-m-Y H:i:s"));
             $this->module->validateOrder($cart->id, _PS_OS_BANKWIRE_, $total, $this->module->l('Visa / MasterCard'), $this->module->l('Payment successful'), null, (int)$currency->id, false, $customer->secure_key);
-            $orderId = Order::getIdByCartId((int)$cart->id);
+            $this->decta->log_info('decta_payment_id: ' . $payment['id']);
+            $orderId = Order::getOrderByCartId((int)$cart->id);
+            $this->decta->log_info('decta_order_id: ' . $orderId);
+            $this->decta->log_info('decta_cart_id: ' . $cart->id);
             $this->context->cookie->__set('decta_payment_id', $payment['id']);
             $this->context->cookie->__set('decta_order_id', $orderId);
             $this->context->cookie->__set('decta_cart_id', $cart->id);
@@ -87,7 +90,7 @@ class DectaPaymentModuleFrontController extends ModuleFrontController
         ];
 
         $findUser = $this->decta->getUser($user_data['email'],$user_data['phone']);
-        if(!$findUser){
+        if(!$findUser) {
             if($this->decta->createUser($user_data)){
                 $findUser = $this->decta->getUser($user_data['email'],$user_data['phone']);
             }
