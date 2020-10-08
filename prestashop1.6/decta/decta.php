@@ -44,6 +44,8 @@ class Decta extends PaymentModule
             return false;
         }
 
+        Configuration::updateValue('EXPIRATION_TIME', '30');
+
         return true;
     }
 
@@ -51,6 +53,7 @@ class Decta extends PaymentModule
     {
         if (!Configuration::deleteByName('DECTA_PUBLIC_KEY')
             || !Configuration::deleteByName('DECTA_PRIVATE_KEY')
+            || !Configuration::deleteByName('EXPIRATION_TIME')
             || !parent::uninstall()) {
             return false;
         }
@@ -69,6 +72,17 @@ class Decta extends PaymentModule
                 $this->_postErrors[] = $this->l('Private key is required.');
             }
 
+            $expirationTime = (int)Tools::getValue('EXPIRATION_TIME');
+
+            if (!$expirationTime) {
+                $this->_postErrors[] = $this->l('Expiration time is required.');
+            }
+
+
+            if ($expirationTime < 5) {
+                $this->_postErrors[] = $this->l('Expiration time cannot be less than 5 minutes.');
+                Configuration::updateValue('EXPIRATION_TIME', '5');
+            }
         }
     }
 
@@ -77,6 +91,9 @@ class Decta extends PaymentModule
         if (Tools::isSubmit('btnSubmit')) {
             Configuration::updateValue('DECTA_PUBLIC_KEY', Tools::getValue('DECTA_PUBLIC_KEY'));
             Configuration::updateValue('DECTA_PRIVATE_KEY', Tools::getValue('DECTA_PRIVATE_KEY'));
+            $expirationTime = (int)Tools::getValue('EXPIRATION_TIME');
+            $expirationTime = empty($expirationTime) ? 30 : $expirationTime;
+            Configuration::updateValue('EXPIRATION_TIME', $expirationTime);
         }
         $this->_html .= $this->displayConfirmation($this->l('Settings updated'));
     }
@@ -182,6 +199,12 @@ class Decta extends PaymentModule
                         'name' => 'DECTA_PRIVATE_KEY',
                         'required' => true,
                     ),
+                    array(
+                        'type' => 'text',
+                        'label' => $this->l('Payment expiration time (min)'),
+                        'name' => 'EXPIRATION_TIME',
+                        'required' => true,
+                    ),
                 ),
                 'submit' => array(
                     'title' => $this->l('Save'),
@@ -215,6 +238,7 @@ class Decta extends PaymentModule
         return array(
             'DECTA_PUBLIC_KEY' => Tools::getValue('DECTA_PUBLIC_KEY', Configuration::get('DECTA_PUBLIC_KEY')),
             'DECTA_PRIVATE_KEY' => Tools::getValue('DECTA_PRIVATE_KEY', Configuration::get('DECTA_PRIVATE_KEY')),
+            'EXPIRATION_TIME' => Tools::getValue('EXPIRATION_TIME', Configuration::get('EXPIRATION_TIME')),
         );
     }
 

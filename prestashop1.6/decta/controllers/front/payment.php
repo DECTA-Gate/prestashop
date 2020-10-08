@@ -22,10 +22,16 @@ class DectaPaymentModuleFrontController extends ModuleFrontController
         $this->decta = new DectaAPI(
             Configuration::get('DECTA_PRIVATE_KEY'),
             Configuration::get('DECTA_PUBLIC_KEY'),
+            Configuration::get('EXPIRATION_TIME'),
             new DectaLoggerPrestashop()
         );
 
         $currency = new CurrencyCore($cart->id_currency);
+        $customer = new Customer($cart->id_customer);
+        $expirationTime = (int)$this->decta->getExpirationTime();
+        $minutesToAdd = empty($expirationTime) ? 30 : $expirationTime;
+        $this->decta->log_info("Expiration time: " . $minutesToAdd);
+        $currentDate = new DateTime("now", new \DateTimeZone("UTC"));
         $total = round($cart->getOrderTotal(true, Cart::BOTH), 2);
         $this->decta->log_info("Total: " . $total);
 
@@ -34,8 +40,10 @@ class DectaPaymentModuleFrontController extends ModuleFrontController
             'referrer' => 'prestashop v1.6 module ' . DECTA_MODULE_VERSION,
             'language' => $language,
             'success_redirect' => $this->context->link->getModuleLink('decta', 'validation'),
-            'failure_redirect' => $this->context->link->getPageLink('order', (int)$this->context->language->id) . "&step=3",
-            'currency' => $currency->iso_code
+            'failure_redirect' => $this->context->link->getModuleLink('decta', 'validation'),
+            'currency' => $currency->iso_code,
+            'issued_overried' => $currentDate->getTimestamp(),
+            'due' => $currentDate->add(new DateInterval('PT' . $minutesToAdd . 'M'))->getTimestamp(),
         );
 
         $this->addUserData($cart, $params);
@@ -49,7 +57,13 @@ class DectaPaymentModuleFrontController extends ModuleFrontController
         $payment = $this->decta->create_payment($params);
 
         if ($payment) {
+            $this->decta->log_info("Create prestashop order start: " . date("d-m-Y H:i:s"));
+            $this->module->validateOrder($cart->id, _PS_OS_BANKWIRE_, $total, $this->module->l('Visa / MasterCard'), $this->module->l('Payment successful'), null, (int)$currency->id, false, $customer->secure_key);
+            $orderId = Order::getIdByCartId((int)$cart->id);
             $this->context->cookie->__set('decta_payment_id', $payment['id']);
+            $this->context->cookie->__set('decta_order_id', $orderId);
+            $this->context->cookie->__set('decta_cart_id', $cart->id);
+            $this->decta->log_info("Create prestashop order end: " . date("d-m-Y H:i:s"));
             $this->decta->log_info('Got checkout url, redirecting');
             Tools::redirect($payment['full_page_checkout']);
         } else {

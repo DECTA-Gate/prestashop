@@ -41,9 +41,11 @@ class DectaValidationModuleFrontController extends ModuleFrontController
 
 		if ($decta->was_payment_successful($cartId, $paymentId)) {
 			$order->setCurrentState(Configuration::get('PS_OS_PAYMENT'));
+            $order->setMessage('Payment saccessful');
 			$decta->log_info('Verification order #' . $cartId . ' done, redirecting to ' . $redirectingUrl);
 		} else {
 			$order->setCurrentState(Configuration::get('PS_OS_ERROR'));
+            $order->setMessage('ERROR: Payment received, but verification failed');
 			$decta->log_info('Verification order #' . $cartId . ' failed, redirecting to ' . $redirectingUrl);
 		}
 

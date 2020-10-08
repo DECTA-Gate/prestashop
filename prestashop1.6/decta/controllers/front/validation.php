@@ -10,6 +10,7 @@ class DectaValidationModuleFrontController extends ModuleFrontController
 		$decta = new DectaAPI(
 			Configuration::get('DECTA_PRIVATE_KEY'),
 			Configuration::get('DECTA_PUBLIC_KEY'),
+            Configuration::get('EXPIRATION_TIME'),
 			new DectaLoggerPrestashop()
 		);	
 
@@ -26,21 +27,27 @@ class DectaValidationModuleFrontController extends ModuleFrontController
 			Tools::redirect('index.php?controller=order&step=1');
 		}
 
-		$currency = $this->context->currency;
-		$total = (float)$cart->getOrderTotal(true, Cart::BOTH);
+        $cartId = $this->context->cookie->decta_cart_id;
+        $orderId = $this->context->cookie->decta_order_id;
+        $paymentId = $this->context->cookie->decta_payment_id;
 
-		$customerGroup = Group::getCurrent();
-        $customerGroupName = $customerGroup->name[1];
-		$groupSymbol = strtolower($customerGroupName[0]);
-		$cartId = (string) $groupSymbol . $cart->id;
-				
-		if ($decta->was_payment_successful($cartId, $this->context->cookie->decta_payment_id)) {
-			$this->module->validateOrder($cart->id, _PS_OS_PAYMENT_, $total, $this->module->l('Visa / MasterCard'), $this->module->l('Payment successful'), NULL, (int)$currency->id, false, $customer->secure_key);
-		} else {
-			$this->module->validateOrder($cart->id, _PS_OS_ERROR_, $total, $this->module->l('Visa / MasterCard'), $this->module->l('ERROR: Payment received, but verification failed'), NULL, (int)$currency->id, false, $customer->secure_key);
-		}
-		$decta->log_info('Verification order ' . $this->module->currentOrder . ' done, redirecting');
-		$decta->log_info("REDIRECT = " . 'index.php?controller=order-confirmation&id_cart='.$cart->id.'&id_module='.$this->module->id.'&id_order='.$this->module->currentOrder.'&key='.$customer->secure_key);
-		Tools::redirect('index.php?controller=order-confirmation&id_cart='.$cart->id.'&id_module='.$this->module->id.'&id_order='.$this->module->currentOrder.'&key='.$customer->secure_key);
+        $order = new Order($orderId);
+
+        if (!Validate::isLoadedObject($order)) {
+            $decta->log_error('Internal prestashop order error occured', $order);
+            Tools::redirect('index.php?controller=order&step=1');
+        }
+
+        $redirectingUrl = 'index.php?controller=order-confirmation&id_cart='.$cartId.'&id_module='.$this->module->id.'&id_order='.$orderId.'&key='.$customer->secure_key;
+
+        if ($decta->was_payment_successful($cartId, $paymentId)) {
+            $order->setCurrentState(Configuration::get('PS_OS_PAYMENT'));
+            $decta->log_info('Verification order #' . $cartId . ' done, redirecting to ' . $redirectingUrl);
+        } else {
+            $order->setCurrentState(Configuration::get('PS_OS_ERROR'));
+            $decta->log_info('Verification order #' . $cartId . ' failed, redirecting to ' . $redirectingUrl);
+        }
+
+        Tools::redirect($redirectingUrl);
 	}
 }

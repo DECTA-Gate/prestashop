@@ -3,11 +3,17 @@ define('DECTA_MODULE_VERSION', 'v2.0');
 define('ROOT_URL', 'https://gate.decta.com');
 Class DectaAPI
 {
-    public function __construct($private_key, $public_key, $logger)
+    public function __construct($private_key, $public_key, $expiration_time, $logger)
     {
         $this->private_key = $private_key;
         $this->public_key = $public_key;
+        $this->expiration_time = $expiration_time;
         $this->logger = $logger;
+    }
+
+    public function getExpirationTime()
+    {
+        return $this->expiration_time;
     }
 
     public function create_payment($params)
