@@ -50,7 +50,7 @@ class DectaPaymentModuleFrontController extends ModuleFrontController
 
         $params['products'][] = array(
             'price' => $total,
-            'title' => "default",
+            'title' => $this->module->l('Invoice for payment #') . $cart->id,
             'quantity' => 1
         );
 

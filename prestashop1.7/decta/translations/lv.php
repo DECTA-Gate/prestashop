@@ -22,5 +22,6 @@ $_MODULE['<{decta}prestashop>payment_return_091c355628c309a12c3e4858c6672582'] =
 $_MODULE['<{decta}prestashop>payment_return_d15feee53d81ea16269e54d4784fa123'] = ' Mēs pamanījām problēmu ar jūsu sūtījumu. Ja Jūs domājat, ka notika kļūda, sazinaties';
 $_MODULE['<{decta}prestashop>payment_return_66fcf4c223bbf4c7c886d4784e1f62e4'] = 'ar mūsu klientu atbalsta komandu';
 $_MODULE['<{decta}prestashop>decta_intro_92c9bed0097b8e7bc21793217fb39d98'] = 'Šis modulis ļauj pieņemt drošus maksājumus, izmantojot bankas kartes.';
+$_MODULE['<{decta}prestashop>payment_dffd756d953b7964bfc4820fbac5d323'] = 'Maksājuma rēķins #maksājumanumurs #';
 $_MODULE['<{decta}prestashop>payment_24b23a659df2c32a03b4fad4cf03eebd'] = 'Visa / MasterCard';
 $_MODULE['<{decta}prestashop>payment_f95da1c548338c3b25654b98a1b9779f'] = ' Maksājums veiksmīgs';
